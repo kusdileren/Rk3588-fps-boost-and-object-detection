@@ -63,10 +63,14 @@ if [[ ! -f "$VIDEO" ]]; then
   echo "HATA: $VIDEO bulunamadi."; exit 1
 fi
 
+# convert_to_onnx.py ciktilari, --weights ile verilen dosyanin bulundugu
+# klasore yaziyor (cwd'ye degil) -- o yuzden yollari weights'in dizinine
+# gore hesapliyoruz.
+WEIGHTS_DIR="$(dirname "$WEIGHTS")"
 BASE_NAME="$(basename "$WEIGHTS" .pt)"
-ONNX_STD="${BASE_NAME}.onnx"
-ONNX_SPLIT="${BASE_NAME}_split.onnx"
-RKNN_OUT="${BASE_NAME}_${TARGET}.rknn"
+ONNX_STD="${WEIGHTS_DIR}/${BASE_NAME}.onnx"
+ONNX_SPLIT="${WEIGHTS_DIR}/${BASE_NAME}_split.onnx"
+RKNN_OUT="${WEIGHTS_DIR}/${BASE_NAME}_${TARGET}.rknn"
 
 echo "== [1/3] .pt -> .onnx (+ split) =="
 python3 convert_to_onnx.py --weights "$WEIGHTS"
