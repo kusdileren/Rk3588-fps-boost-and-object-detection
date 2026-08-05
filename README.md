@@ -67,6 +67,9 @@ python3 convert_to_onnx.py --weights yolo26n.pt
 Bu iki dosya uretir:
 - `yolo26n.onnx` — standart export, **CPU benchmark icin kullan**
 - `yolo26n_split.onnx` — box/cls ayri iki cikisli, **sadece RKNN donusturme icin**
+- scp yolo26n.onnx alpagut@<ip>:~/npu_test/cpp_bench/build/
+- scp yolo26n_rk3588_v2.rknn alpagut@<ip>:~/npu_test/cpp_bench/build/
+
 
 > **Neden split gerekli:** Ultralytics'in tek-cikisli export'unda box
 > koordinatlari (0-640 piksel) ve class skorlari (0-1) ayni int8 scale'i
