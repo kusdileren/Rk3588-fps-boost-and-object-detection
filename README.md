@@ -105,10 +105,10 @@ uretir; `build/` git'e girmez, her makinede yeniden olusturulur.
 
 ```bash
 # CPU (fp32, tek-cikisli standart onnx ile)
-./benchmark_cpu --input test_video.mp4 --output cikti_cpu.mp4 --model ../../model_convert/yolo26n.onnx
+./benchmark_cpu --input test_video.mp4 --model yolo26n.onnx --output cpu_test.mp4
 
 # NPU (int8, split'ten uretilen rknn ile)
-./benchmark_npu --input test_video.mp4 --output cikti_npu.mp4 --model ../../model_convert/yolo26n_rk3588.rknn
+./benchmark_npu --input test_video.mp4 --output npu_test.mp4 --model yolo26n_rk3588_v2.rknn
 ```
 
 Ortak parametreler: `--conf 0.4`, `--imgsz 640`, `--show`,
