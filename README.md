@@ -111,7 +111,7 @@ uretir; `build/` git'e girmez, her makinede yeniden olusturulur.
 ./benchmark_cpu --input test_video.mp4 --model yolo26n.onnx --output cpu_test.mp4
 
 # NPU (int8, split'ten uretilen rknn ile)
-./benchmark_npu --input test_video.mp4 --output npu_test.mp4 --model yolo26n_rk3588_v2.rknn
+./benchmark_npu --input test_video.mp4 --output npu_test.mp4 --model yolo26n_rk3588.rknn
 ```
 
 Ortak parametreler: `--conf 0.4`, `--imgsz 640`, `--show`,
