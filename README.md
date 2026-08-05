@@ -9,6 +9,9 @@ karsilastirilabilir.
 
 ```
 .
+├── scripts/
+│   ├── setup_local_pc.sh       # Model donusturme PC'si icin kurulum (conda/rknn_env)
+│   └── setup_rk3588_board.sh   # Rock5B karti icin kurulum (SDK'lar + build)
 ├── cpp_bench/
 │   ├── CMakeLists.txt
 │   ├── benchmark_cpu.cpp      # ONNX Runtime (CPU) inference
@@ -16,8 +19,7 @@ karsilastirilabilir.
 ├── model_convert/
 │   ├── convert_to_onnx.py     # .pt -> .onnx export + box/cls split
 │   └── convert_from_video.py  # split .onnx -> int8 .rknn (video kalibrasyonlu)
-├── third_party/
-│   └── rknpu2/                 # (repoya girmez, asagida indirme talimati var)
+├── third_party/                # setup_rk3588_board.sh tarafindan doldurulur, repoya girmez
 ├── .gitignore
 └── README.md
 ```
@@ -26,34 +28,42 @@ karsilastirilabilir.
 > ciktilarinin karisik durdugu bir yapidan duzenlendi. Kendi makinende de
 > ayni karisikligi yasamamak icin kaynak dosyalari (`.cpp`, `CMakeLists.txt`)
 > her zaman `cpp_bench/` icinde tut, derlemeyi ayri bir `build/` klasorunde
-> yap (asagida anlatiliyor). `build/` klasoru `.gitignore` ile disarida
-> tutuluyor.
+> yap. `build/` klasoru `.gitignore` ile disarida tutuluyor.
 
-## 1) Gereksinimler
+## Hizli baslangic
 
-- Ubuntu 22.04+ (Rock5B icin resmi RK3588 imaji onerilir)
-- CMake >= 3.16, g++ (C++17)
-- OpenCV 4.x (**FFmpeg destegiyle derlenmis olmali**, video yazma icin;
-  `python3 -c "import cv2; print(cv2.getBuildInformation())"` ile kontrol et)
-- ONNX Runtime (C++ headers + lib) — CPU benchmark icin
-- RKNN Runtime SDK (`librknnrt.so`, `rknn_api.h`) — NPU benchmark icin
-- Python 3.10 + conda/venv — model donusturme icin
-  - `ultralytics`, `onnx`, `onnxslim`, `rknn-toolkit2`, `opencv-python`
+Iki farkli makine kullaniyorsun; her biri icin ayri script var.
 
-## 2) RKNN SDK kurulumu (NPU tarafi icin zorunlu)
-
-RKNN Runtime SDK bu repoya dahil degil (buyuk ve platforma ozel). Kur:
+### 1) Model donusturme PC'si (WSL2 / x86_64 Linux)
 
 ```bash
-git clone https://github.com/airockchip/rknn-toolkit2.git third_party/rknpu2_src
-# Runtime .so ve header'lari kendi projene kopyala:
-mkdir -p third_party/rknpu2/{include,lib}
-cp third_party/rknpu2_src/rknpu2/runtime/Linux/librknn_api/include/*.h third_party/rknpu2/include/
-cp third_party/rknpu2_src/rknpu2/runtime/Linux/librknn_api/aarch64/librknnrt.so third_party/rknpu2/lib/
+chmod +x scripts/setup_local_pc.sh
+./scripts/setup_local_pc.sh
+conda activate rknn_env
 ```
 
-`CMakeLists.txt` bu yollari referans alacak sekilde ayarlanmali (`target_include_directories`
-/ `target_link_libraries`, dosyanin icinde ornek var).
+Bu, Miniconda'yi (yoksa) kurar, `rknn_env` adinda Python 3.10 ortami acar ve
+`ultralytics`, `onnx`, `onnxslim`, `rknn-toolkit2`, `opencv-python`
+paketlerini kurar.
+
+### 2) Rock5B / RK3588 karti
+
+```bash
+chmod +x scripts/setup_rk3588_board.sh
+./scripts/setup_rk3588_board.sh
+```
+
+Bu script:
+- Build araclarini ve OpenCV'yi apt ile kurar
+- RKNN Runtime SDK'yi `airockchip/rknn-toolkit2` reposundan cekip
+  `third_party/rknpu2/` altina yerlestirir
+- ONNX Runtime (aarch64) release'ini indirip `third_party/onnxruntime/`
+  altina cikartir
+- Sonunda **projeyi hemen build etmek isteyip istemedigini sorar** —
+  isterse otomatik build eder, istemezse elle build komutlarini gosterir
+
+> Eskiden burada RKNN SDK'yi elle klonlayip kopyalama adimlari vardi;
+> artik hepsi `setup_rk3588_board.sh` icinde otomatik.
 
 ## 3) Model hazirlama
 
@@ -67,9 +77,12 @@ python3 convert_to_onnx.py --weights yolo26n.pt
 Bu iki dosya uretir:
 - `yolo26n.onnx` — standart export, **CPU benchmark icin kullan**
 - `yolo26n_split.onnx` — box/cls ayri iki cikisli, **sadece RKNN donusturme icin**
-- scp yolo26n.onnx alpagut@<ip>:~/npu_test/cpp_bench/build/
-- scp yolo26n_rk3588_v2.rknn alpagut@<ip>:~/npu_test/cpp_bench/build/
 
+Kart tarafina gecirmek icin:
+```bash
+scp yolo26n.onnx <kullanici>@<kart_ip>:~/npu_test/cpp_bench/build/
+scp yolo26n_rk3588.rknn <kullanici>@<kart_ip>:~/npu_test/cpp_bench/build/
+```
 
 > **Neden split gerekli:** Ultralytics'in tek-cikisli export'unda box
 > koordinatlari (0-640 piksel) ve class skorlari (0-1) ayni int8 scale'i
@@ -94,12 +107,21 @@ yakinsa quantization o kadar iyi sonuc verir.
 
 ## 4) Derleme (out-of-source build)
 
+`setup_rk3588_board.sh` sana zaten build edip etmeyecegini soruyor. Elle
+yapmak istersen (veya kaynak degistirdikten sonra tekrar derlemek icin):
+
 ```bash
 cd cpp_bench
 mkdir -p build && cd build
-cmake ..
+cmake .. \
+  -DONNXRUNTIME_ROOT=$(pwd)/../../third_party/onnxruntime \
+  -DRKNN_ROOT=$(pwd)/../../third_party/rknpu2
 make -j$(nproc)
 ```
+
+`ONNXRUNTIME_ROOT` / `RKNN_ROOT` verilmezse `CMakeLists.txt` varsayilan
+olarak repo-koku/`third_party/` altina bakar (yani `setup_rk3588_board.sh`
+calistirdiysan hicbir sey vermene gerek yok, dogrudan `cmake ..` yeterli).
 
 Bu, `benchmark_cpu` ve `benchmark_npu` binary'lerini `build/` icinde
 uretir; `build/` git'e girmez, her makinede yeniden olusturulur.
@@ -122,7 +144,8 @@ Ortak parametreler: `--conf 0.4`, `--imgsz 640`, `--show`,
 - **Video ciktisi acilamiyor / GStreamer "cannot link elements":**
   OpenCV'nin video yazma backend'i (FFmpeg/GStreamer) sistemde eksik
   olabilir. `python3 -c "import cv2; print(cv2.getBuildInformation())"`
-  ile "Video I/O" bolumunu kontrol et.
+  ile "Video I/O" bolumunu kontrol et. `setup_rk3588_board.sh` bu kontrolu
+  otomatik yapip uyari veriyor.
 - **Video kalitesi dusuk:** Varsayilan `mp4v` codec dusuk bitrate
   kullanir; kod `avc1` (H.264) deniyor, olmazsa `mp4v`'ye dusuyor.
   Sistemde gercek bir H.264 encoder oldugundan emin ol
@@ -133,6 +156,10 @@ Ortak parametreler: `--conf 0.4`, `--imgsz 640`, `--show`,
   beklenen bir yan etkisi (box koordinatlari da quantize ediliyor,
   anchor rekabeti degisebiliyor). Daha stabil gorunum icin basit bir
   EMA/tracker eklenebilir.
+- **CMake "ONNX Runtime bulunamadi" hatasi verir:**
+  `scripts/setup_rk3588_board.sh` calistirilmamis olabilir, ya da
+  `third_party/onnxruntime` silinmis olabilir. Script'i tekrar calistir
+  ya da `cmake .. -DONNXRUNTIME_ROOT=/dogru/yol` ile elle gecir.
 
 ## Lisans
 
