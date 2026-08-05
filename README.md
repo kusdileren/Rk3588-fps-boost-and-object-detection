@@ -19,10 +19,14 @@ karsilastirilabilir.
 ├── model_convert/
 │   ├── convert_to_onnx.py     # .pt -> .onnx export + box/cls split
 │   └── convert_from_video.py  # split .onnx -> int8 .rknn (video kalibrasyonlu)
-├── third_party/                # setup_rk3588_board.sh tarafindan doldurulur, repoya girmez
 ├── .gitignore
 └── README.md
 ```
+
+> `setup_rk3588_board.sh`, RKNN Runtime SDK'yi `/usr/include/rknn` ve
+> `/usr/lib` altina (sistem geneli), ONNX Runtime'i ise
+> `$HOME/onnxruntime-linux-aarch64-1.19.2` altina kurar. Ikisi de repo
+> disinda oldugu icin repoya girmez.
 
 > **Not:** Bu repo daha once `build/` klasoru icinde kaynak + derleme
 > ciktilarinin karisik durdugu bir yapidan duzenlendi. Kendi makinende de
@@ -56,9 +60,14 @@ chmod +x scripts/setup_rk3588_board.sh
 Bu script:
 - Build araclarini ve OpenCV'yi apt ile kurar
 - RKNN Runtime SDK'yi `airockchip/rknn-toolkit2` reposundan cekip
-  `third_party/rknpu2/` altina yerlestirir
-- ONNX Runtime (aarch64) release'ini indirip `third_party/onnxruntime/`
-  altina cikartir
+  `sudo` ile `/usr/include/rknn` ve `/usr/lib` altina kurar
+  (CMakeLists.txt bu yollari sabit bekliyor, RKNN SDK zaten
+  kullaniciya/makineye ozel degil)
+- ONNX Runtime (aarch64) release'ini indirip
+  `$HOME/onnxruntime-linux-aarch64-1.19.2` altina cikartir
+  (CMakeLists.txt varsayilan olarak burayi arar; farkli bir yere
+  kurmak istersen `cmake .. -DONNXRUNTIME_ROOT=/senin/yolun` ile
+  override edebilirsin)
 - Sonunda **projeyi hemen build etmek isteyip istemedigini sorar** —
   isterse otomatik build eder, istemezse elle build komutlarini gosterir
 
@@ -66,6 +75,26 @@ Bu script:
 > artik hepsi `setup_rk3588_board.sh` icinde otomatik.
 
 ## 3) Model hazirlama
+
+### Hizli yol: tek komut
+
+```bash
+cd model_convert
+chmod +x convert_all.sh
+./convert_all.sh --weights yolo26n.pt --video ../test_video.mp4
+```
+
+Bu, asagidaki (a) ve (b) adimlarini arka arkaya calistirir ve sonunda
+board'a `scp` ile gonderip gondermek istemedigini sorar. `--weights` /
+`--video` vermezsen mevcut `.pt` / `.mp4` dosyalarini bulup soruyla
+teyit ettirir.
+
+> **Not:** Bu script, `convert_to_onnx.py`'nin `<isim>_split.onnx`
+> adlandirma kuralini varsayiyor (README'deki ornekle ayni). Kendi
+> script'in farkli bir isimlendirme kullaniyorsa `convert_all.sh`
+> icindeki `ONNX_SPLIT` degiskenini ona gore guncelle.
+
+### Elle, adim adim
 
 ### a) .pt -> split .onnx (RKNN icin)
 
@@ -113,15 +142,14 @@ yapmak istersen (veya kaynak degistirdikten sonra tekrar derlemek icin):
 ```bash
 cd cpp_bench
 mkdir -p build && cd build
-cmake .. \
-  -DONNXRUNTIME_ROOT=$(pwd)/../../third_party/onnxruntime \
-  -DRKNN_ROOT=$(pwd)/../../third_party/rknpu2
+cmake ..
 make -j$(nproc)
 ```
 
-`ONNXRUNTIME_ROOT` / `RKNN_ROOT` verilmezse `CMakeLists.txt` varsayilan
-olarak repo-koku/`third_party/` altina bakar (yani `setup_rk3588_board.sh`
-calistirdiysan hicbir sey vermene gerek yok, dogrudan `cmake ..` yeterli).
+`setup_rk3588_board.sh` calistirdiysan `ONNXRUNTIME_ROOT` icin hicbir sey
+vermene gerek yok — `CMakeLists.txt` varsayilan olarak
+`$HOME/onnxruntime-linux-aarch64-1.19.2` altina bakar. Farkli bir yere
+kurduysan: `cmake .. -DONNXRUNTIME_ROOT=/senin/yolun`.
 
 Bu, `benchmark_cpu` ve `benchmark_npu` binary'lerini `build/` icinde
 uretir; `build/` git'e girmez, her makinede yeniden olusturulur.
@@ -158,8 +186,13 @@ Ortak parametreler: `--conf 0.4`, `--imgsz 640`, `--show`,
   EMA/tracker eklenebilir.
 - **CMake "ONNX Runtime bulunamadi" hatasi verir:**
   `scripts/setup_rk3588_board.sh` calistirilmamis olabilir, ya da
-  `third_party/onnxruntime` silinmis olabilir. Script'i tekrar calistir
-  ya da `cmake .. -DONNXRUNTIME_ROOT=/dogru/yol` ile elle gecir.
+  `$HOME/onnxruntime-linux-aarch64-1.19.2` silinmis olabilir. Script'i
+  tekrar calistir ya da `cmake .. -DONNXRUNTIME_ROOT=/dogru/yol` ile elle
+  gecir.
+- **`/usr/include/rknn/rknn_api.h` bulunamiyor:** RKNN SDK sisteme
+  kurulmamis. `scripts/setup_rk3588_board.sh` tekrar calistir; script
+  zaten `/usr/include/rknn` ve `/usr/lib/librknnrt.so` varsa adimi
+  atlar, yoksa kurar.
 
 ## Lisans
 
