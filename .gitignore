@@ -1,0 +1,36 @@
+# ---- Build ciktilari (out-of-source build) ----
+build/
+*.o
+*.obj
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.avi
+
+# ---- Model agirliklari / dönüştürme ara ciktilari ----
+# Bunlar buyuk ve makineye ozel oldugu icin repoya girmiyor.
+# README.md'de nereden alinacagi / nasil uretilecegi anlatiliyor.
+*.pt
+*.onnx
+*.rknn
+
+# ---- Video dosyalari ----
+*.mp4
+*.mkv
+!docs/*.mp4          # ornek/demo videosu istersen docs altina koyup burayi acabilirsin
+
+# ---- Python ----
+__pycache__/
+*.pyc
+.venv/
+venv/
+rknn_env/
+
+# ---- IDE / OS ----
+.vscode/
+.DS_Store
+*.swp
+
+# ---- RKNN SDK (kaynagi buyuk, ayri indiriliyor) ----
+third_party/rknpu2/
