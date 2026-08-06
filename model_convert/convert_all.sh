@@ -94,7 +94,7 @@ echo "  CPU icin   -> $ONNX_STD"
 echo "  NPU icin   -> $RKNN_OUT"
 
 echo ""
-read -rp "Bu iki dosyayi Rock5B'ye scp ile gondermek ister misin? [y/N] " do_scp
+read -rp "Bu iki dosyayi (ve kalibrasyon videosunu) Rock5B'ye scp ile gondermek ister misin? [y/N] " do_scp
 if [[ "${do_scp:-N}" =~ ^[Yy]$ ]]; then
   read -rp "Board kullanici@ip (orn. rock@192.168.1.50): " BOARD_HOST
   # Onemli: build/ ICINE degil, cpp_bench/ (build'in bir ustu) icine
@@ -103,12 +103,12 @@ if [[ "${do_scp:-N}" =~ ^[Yy]$ ]]; then
   # cpp_bench/ klasoru asla silinmedigi icin veri dosyalari icin guvenli yer.
   read -rp "Board hedef klasor [~/npu_test/cpp_bench/]: " BOARD_PATH
   BOARD_PATH="${BOARD_PATH:-~/npu_test/cpp_bench/}"
-  scp "$ONNX_STD" "$RKNN_OUT" "${BOARD_HOST}:${BOARD_PATH}"
+  scp "$ONNX_STD" "$RKNN_OUT" "$VIDEO" "${BOARD_HOST}:${BOARD_PATH}"
   echo "Gonderildi: ${BOARD_HOST}:${BOARD_PATH}"
   echo ""
   echo "NOT: build/ klasorunu 'rm -rf build' ile silsen bile bu dosyalar"
   echo "     etkilenmez, cunku build/'in DISINA gonderildi."
 else
   echo "scp atlandi. Elle gondermek icin (build/ ICINE DEGIL, cpp_bench/ ICINE):"
-  echo "  scp $ONNX_STD $RKNN_OUT <kullanici>@<board_ip>:~/npu_test/cpp_bench/"
+  echo "  scp $ONNX_STD $RKNN_OUT $VIDEO <kullanici>@<board_ip>:~/npu_test/cpp_bench/"
 fi
