@@ -1,0 +1,25 @@
+# =============================================================================
+# docker-compose.yml
+#
+# model_convert/ klasorunu ve kok dizindeki test_video.mp4'u container'a
+# mount eder, ciktilar (.onnx / .rknn) dogrudan host'taki model_convert/
+# icinde olusur.
+#
+# Kullanim:
+#   docker compose build
+#   docker compose run --rm model-convert bash
+#   # container icinde:
+#   cd model_convert   # zaten workdir, sadece bilgi amacli
+#   ./convert_all.sh --weights yolo26n.pt --video ../test_video.mp4
+# =============================================================================
+services:
+  model-convert:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./model_convert:/workspace/model_convert
+      - ./test_video.mp4:/workspace/test_video.mp4:ro
+    working_dir: /workspace/model_convert
+    tty: true
+    stdin_open: true

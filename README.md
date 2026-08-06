@@ -9,8 +9,10 @@ karsilastirilabilir.
 
 ```
 .
+├── Dockerfile                  # Model donusturme ortami (onerilen yol)
+├── docker-compose.yml          # Dockerfile'i model_convert/ mount'uyla calistirir
 ├── scripts/
-│   ├── setup_local_pc.sh       # Model donusturme PC'si icin kurulum (uv/rknn_env)
+│   ├── setup_local_pc.sh       # (legacy) uv/rknn_env ile native/WSL kurulum
 │   └── setup_rk3588_board.sh   # Rock5B karti icin kurulum (SDK'lar + build)
 ├── cpp_bench/
 │   ├── CMakeLists.txt
@@ -38,23 +40,47 @@ karsilastirilabilir.
 
 Iki farkli makine kullaniyorsun; her biri icin ayri script var.
 
-### 1) Model donusturme PC'si (WSL2 / x86_64 Linux)
+### 1) Model donusturme PC'si (Docker — onerilen)
+
+`rknn-toolkit2`'nin native Windows icin resmi wheel paketi yok, sadece
+Linux icin var. Eskiden bunun icin WSL + `uv` gerekiyordu; artik Docker
+Desktop (Windows/Mac/Linux fark etmeksizin) yeterli, WSL ile ugrasmaya
+gerek yok.
+
+Once Docker kurulu olmali:
+- Windows/Mac: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Linux: [Docker Engine](https://docs.docker.com/engine/install/) (+ `docker compose` plugin)
+
+Kurulumdan sonra:
 
 ```bash
-chmod +x scripts/setup_local_pc.sh
-./scripts/setup_local_pc.sh
-source rknn_env/bin/activate
+docker compose build
+docker compose run --rm model-convert bash
 ```
 
-Bu, `uv`'yi (yoksa) kurar, `rknn_env` adinda Python 3.10 sanal ortami
-acar ve `ultralytics`, `onnx`, `onnxslim`, `rknn-toolkit2`,
-`opencv-python` paketlerini kurar.
+Bu, container icinde `/workspace/model_convert` altina `model_convert/`
+klasorunu mount eder (ciktilar dogrudan host'ta olusur) ve seni bir
+bash prompt'una birakir. Icinde:
 
-> **Not:** `rknn-toolkit2`'nin native Windows icin resmi wheel paketi
-> yok, sadece Linux icin var. Bu script'i PowerShell'den degil, **WSL**
-> (ya da baska bir Linux) terminalinden calistir. `convert_all.sh`
-> zaten `rknn_env`'i otomatik aktiflestiriyor, elle `source` etmene
-> gerek yok.
+```bash
+./convert_all.sh --weights yolo26n.pt --video ../test_video.mp4
+```
+
+`docker-compose.yml`, kok dizindeki `test_video.mp4`'u da salt-okunur
+olarak mount eder; kendi videon farkli bir isimdeyse
+`docker-compose.yml` icindeki volume satirini guncelle.
+
+> **Eski / legacy yol:** WSL2 veya native Linux'ta `uv` ile calismak
+> istersen `scripts/setup_local_pc.sh` hala duruyor:
+> ```bash
+> chmod +x scripts/setup_local_pc.sh
+> ./scripts/setup_local_pc.sh
+> source rknn_env/bin/activate
+> ```
+> Bu, `uv`'yi (yoksa) kurar, `rknn_env` adinda Python 3.10 sanal ortami
+> acar ve ayni paketleri (`ultralytics`, `onnx`, `onnxslim`,
+> `rknn-toolkit2`, `opencv-python`) kurar. Docker kullanamiyorsan bu
+> yolu tercih et.
 
 ### 2) Rock5B / RK3588 karti
 
