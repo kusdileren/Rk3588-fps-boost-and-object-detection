@@ -55,7 +55,7 @@ PYEOF
 fi
 
 echo "== [3/5] RKNN Runtime SDK indirilip sisteme kuruluyor (${RKNN_SDK_TAG}) =="
-if [[ -f /usr/include/rknn/rknn_api.h && -f /usr/lib/librknnrt.so ]]; then
+if [[ -f /usr/include/rknn_api.h && -f /usr/lib/librknnrt.so ]]; then
   echo "RKNN SDK zaten kurulu (/usr/include/rknn, /usr/lib), atlaniyor."
 else
   TMP_DIR="$(mktemp -d)"
