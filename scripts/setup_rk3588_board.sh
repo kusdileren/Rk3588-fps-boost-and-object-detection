@@ -94,7 +94,11 @@ read -rp "Projeyi simdi build etmek ister misin? [y/N] " do_build
 if [[ "${do_build:-N}" =~ ^[Yy]$ ]]; then
   echo "== Build baslatiliyor (cpp_bench/build) =="
   cd cpp_bench
-  mkdir -p build && cd build
+  # Eski/bozuk bir build/ klasoru (orn. yanlis path'e sahip stale
+  # CMakeCache.txt) varsa temizle, aksi halde cmake sessizce eski
+  # cache'i kullanip "make: no targets" hatasina yol acabilir.
+  rm -rf build
+  mkdir build && cd build
   cmake ..
   make -j"$(nproc)"
   echo ""
