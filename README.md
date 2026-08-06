@@ -144,10 +144,23 @@ yapmak istersen (veya kaynak degistirdikten sonra tekrar derlemek icin):
 
 ```bash
 cd cpp_bench
-mkdir -p build && cd build
+rm -rf build          # daha once bozuk/eski bir build/ varsa temizle
+mkdir build && cd build
 cmake ..
 make -j$(nproc)
 ```
+
+> **Dikkat — ic ice `build/build` tuzagi:** Bu adimlari calistirmadan
+> once `pwd` ile hangi klasorde oldugunu kontrol et. Eger yanlislikla
+> zaten `cpp_bench/build/` icindeyken tekrar `mkdir build && cd build`
+> calistirirsan `cpp_bench/build/build/` gibi ic ice bir klasor
+> olusturursun; bu durumda `cmake ..` bir onceki (dogru) build'in eski
+> `CMakeCache.txt`'ini bulup sessizce onu kullanabilir, `make` de "no
+> targets" hatasi verir. Emin degilsen `cd cpp_bench` (repo icindeki
+> sabit path) ile en bastan basla:
+> ```bash
+> cd cpp_bench && pwd    # .../cpp_bench ile bitmeli, build/build DEGIL
+> ```
 
 `setup_rk3588_board.sh` calistirdiysan `ONNXRUNTIME_ROOT` icin hicbir sey
 vermene gerek yok — `CMakeLists.txt` varsayilan olarak
