@@ -10,7 +10,7 @@ karsilastirilabilir.
 ```
 .
 ├── scripts/
-│   ├── setup_local_pc.sh       # Model donusturme PC'si icin kurulum (conda/rknn_env)
+│   ├── setup_local_pc.sh       # Model donusturme PC'si icin kurulum (uv/rknn_env)
 │   └── setup_rk3588_board.sh   # Rock5B karti icin kurulum (SDK'lar + build)
 ├── cpp_bench/
 │   ├── CMakeLists.txt
@@ -43,12 +43,18 @@ Iki farkli makine kullaniyorsun; her biri icin ayri script var.
 ```bash
 chmod +x scripts/setup_local_pc.sh
 ./scripts/setup_local_pc.sh
-conda activate rknn_env
+source rknn_env/bin/activate
 ```
 
-Bu, Miniconda'yi (yoksa) kurar, `rknn_env` adinda Python 3.10 ortami acar ve
-`ultralytics`, `onnx`, `onnxslim`, `rknn-toolkit2`, `opencv-python`
-paketlerini kurar.
+Bu, `uv`'yi (yoksa) kurar, `rknn_env` adinda Python 3.10 sanal ortami
+acar ve `ultralytics`, `onnx`, `onnxslim`, `rknn-toolkit2`,
+`opencv-python` paketlerini kurar.
+
+> **Not:** `rknn-toolkit2`'nin native Windows icin resmi wheel paketi
+> yok, sadece Linux icin var. Bu script'i PowerShell'den degil, **WSL**
+> (ya da baska bir Linux) terminalinden calistir. `convert_all.sh`
+> zaten `rknn_env`'i otomatik aktiflestiriyor, elle `source` etmene
+> gerek yok.
 
 ### 2) Rock5B / RK3588 karti
 

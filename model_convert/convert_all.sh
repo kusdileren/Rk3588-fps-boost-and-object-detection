@@ -5,9 +5,9 @@
 # model_convert/ altindaki iki adimi (pt -> onnx/split-onnx, split-onnx ->
 # int8 rknn) tek komutla zincirler, sonunda istersen board'a scp de eder.
 #
-# Bu script'i model donusturme PC'sinde, "rknn_env" conda ortami zaten
+# Bu script'i model donusturme PC'sinde, "rknn_env" sanal ortami zaten
 # kuruluyken calistir (once ../scripts/setup_local_pc.sh calistirilmis
-# olmali).
+# olmali). Ortam otomatik aktiflestirilir, elle "source" etmene gerek yok.
 #
 # Kullanim (hepsi opsiyonel, verilmezse varsayilan/soru ile ilerler):
 #   ./convert_all.sh --weights yolo26n.pt --video test_video.mp4 \
@@ -37,11 +37,15 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "== [0/3] Ortam kontrolu =="
-if [[ -z "${CONDA_DEFAULT_ENV:-}" || "$CONDA_DEFAULT_ENV" != "rknn_env" ]]; then
-  echo "rknn_env aktif degil, aktiflestiriliyor..."
+if [[ -z "${VIRTUAL_ENV:-}" ]]; then
+  echo "Sanal ortam aktif degil, aktiflestiriliyor..."
+  ENV_PATH="$(cd "$SCRIPT_DIR/.." && pwd)/rknn_env"
+  if [[ ! -f "$ENV_PATH/bin/activate" ]]; then
+    echo "HATA: $ENV_PATH bulunamadi. Once ../scripts/setup_local_pc.sh calistir."
+    exit 1
+  fi
   # shellcheck disable=SC1091
-  source "$(conda info --base)/etc/profile.d/conda.sh"
-  conda activate rknn_env
+  source "$ENV_PATH/bin/activate"
 fi
 
 # --- Eksik parametreleri sor -------------------------------------------------
