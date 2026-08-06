@@ -107,10 +107,13 @@ Bu iki dosya uretir:
 - `yolo26n.onnx` — standart export, **CPU benchmark icin kullan**
 - `yolo26n_split.onnx` — box/cls ayri iki cikisli, **sadece RKNN donusturme icin**
 
-Kart tarafina gecirmek icin:
+Kart tarafina gecirmek icin (DIKKAT: `build/` klasorunun ICINE degil,
+`cpp_bench/` klasorune -- yani `build/`'in bir ustune -- gonder; cunku
+temiz build almak icin zaman zaman `rm -rf build` yapacaksin ve build/
+icine koydugun her sey bununla birlikte silinir):
 ```bash
-scp yolo26n.onnx <kullanici>@<kart_ip>:~/npu_test/cpp_bench/build/
-scp yolo26n_rk3588.rknn <kullanici>@<kart_ip>:~/npu_test/cpp_bench/build/
+scp yolo26n.onnx <kullanici>@<kart_ip>:~/npu_test/cpp_bench/
+scp yolo26n_rk3588.rknn <kullanici>@<kart_ip>:~/npu_test/cpp_bench/
 ```
 
 > **Neden split gerekli:** Ultralytics'in tek-cikisli export'unda box
@@ -156,13 +159,24 @@ uretir; `build/` git'e girmez, her makinede yeniden olusturulur.
 
 ## 5) Calistirma
 
+Binary'ler `cpp_bench/build/` icinde, ama model dosyalarini ve test
+videosunu `cpp_bench/` (bir ust dizin) icine koyduysan, `build/`
+icinden calistirirken `../` ile referans ver:
+
 ```bash
+cd build
+
 # CPU (fp32, tek-cikisli standart onnx ile)
-./benchmark_cpu --input test_video.mp4 --model yolo26n.onnx --output cpu_test.mp4
+./benchmark_cpu --input ../test_video.mp4 --model ../yolo26n.onnx --output cpu_test.mp4
 
 # NPU (int8, split'ten uretilen rknn ile)
-./benchmark_npu --input test_video.mp4 --output npu_test.mp4 --model yolo26n_rk3588.rknn
+./benchmark_npu --input ../test_video.mp4 --output npu_test.mp4 --model ../yolo26n_rk3588.rknn
 ```
+
+> **Neden `../`:** `build/` klasorunu temiz build icin sik sik
+> `rm -rf build` ile silip yeniden olusturacaksin. Model dosyalarini ve
+> videoyu `build/` icine koyarsan bu komut onlari da siler. `cpp_bench/`
+> icine koyup `../` ile referans vermek bu veri kaybini onler.
 
 Ortak parametreler: `--conf 0.4`, `--imgsz 640`, `--show`,
 `--core-mask auto|0|1|2|all` (sadece NPU).
