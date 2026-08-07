@@ -48,9 +48,15 @@ Desktop (Windows/Mac/Linux fark etmeksizin) yeterli, WSL ile ugrasmaya
 gerek yok.
 
 Once Docker kurulu olmali:
-- Windows/Mac: [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- Linux: [Docker Engine](https://docs.docker.com/engine/install/) (+ `docker compose` plugin)
+- **Windows/Mac:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) indirip kurun.
+- **Linux (Ubuntu/Debian vb.):** Hizli kurulum icin asagidaki komutlari terminalde calistirabilirsiniz (veya [resmi dokumantasyona](https://docs.docker.com/engine/install/) bakabilirsiniz):
 
+  ```bash
+  curl -fsSL [https://get.docker.com](https://get.docker.com) -o get-docker.sh
+  sudo sh get-docker.sh
+  sudo usermod -aG docker $USER
+  newgrp docker 
+  '''
 Kurulumdan sonra:
 
 ```bash
