@@ -55,8 +55,8 @@ Once Docker kurulu olmali:
   curl -fsSL [https://get.docker.com](https://get.docker.com) -o get-docker.sh
   sudo sh get-docker.sh
   sudo usermod -aG docker $USER
-  newgrp docker 
-  '''
+  newgrp docker
+  
 Kurulumdan sonra:
 
 ```bash
