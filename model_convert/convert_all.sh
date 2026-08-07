@@ -5,9 +5,12 @@
 # model_convert/ altindaki iki adimi (pt -> onnx/split-onnx, split-onnx ->
 # int8 rknn) tek komutla zincirler, sonunda istersen board'a scp de eder.
 #
-# Bu script'i model donusturme PC'sinde, "rknn_env" sanal ortami zaten
-# kuruluyken calistir (once ../scripts/setup_local_pc.sh calistirilmis
-# olmali). Ortam otomatik aktiflestirilir, elle "source" etmene gerek yok.
+# Bu script SADECE Docker container'i icinde calistirilmak icin
+# tasarlandi. Once repo kokunde:
+#   docker compose build
+#   docker compose run --rm model-convert bash
+# ile container'a gir, sonra icinde:
+#   cd model_convert && ./convert_all.sh --weights yolo26n.pt --video ../test_video.mp4
 #
 # Kullanim (hepsi opsiyonel, verilmezse varsayilan/soru ile ilerler):
 #   ./convert_all.sh --weights yolo26n.pt --video test_video.mp4 \
@@ -37,15 +40,20 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "== [0/3] Ortam kontrolu =="
-if [[ -z "${VIRTUAL_ENV:-}" ]]; then
-  echo "Sanal ortam aktif degil, aktiflestiriliyor..."
-  ENV_PATH="$(cd "$SCRIPT_DIR/.." && pwd)/rknn_env"
-  if [[ ! -f "$ENV_PATH/bin/activate" ]]; then
-    echo "HATA: $ENV_PATH bulunamadi. Once ../scripts/setup_local_pc.sh calistir."
-    exit 1
-  fi
-  # shellcheck disable=SC1091
-  source "$ENV_PATH/bin/activate"
+if ! python3 -c "from rknn.api import RKNN" &>/dev/null; then
+  echo "HATA: rknn-toolkit2 bu Python ortaminda bulunamadi."
+  echo ""
+  echo "Bu script SADECE Docker container'i icinde calistirilmali. Repo"
+  echo "kokunden (container disinda) sunlari calistir:"
+  echo "  docker compose build"
+  echo "  docker compose run --rm model-convert bash"
+  echo "Container icine girince tekrar dene:"
+  echo "  cd model_convert && ./convert_all.sh --weights yolo26n.pt --video ../test_video.mp4"
+  echo ""
+  echo "(conda/venv/uv gibi baska bir Python ortami aktifse onu once"
+  echo " 'conda deactivate' ile kapat, container disinda bu script'i"
+  echo " hic calistirma.)"
+  exit 1
 fi
 
 # --- Eksik parametreleri sor -------------------------------------------------

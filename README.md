@@ -12,7 +12,6 @@ karsilastirilabilir.
 ├── Dockerfile                  # Model donusturme ortami (onerilen yol)
 ├── docker-compose.yml          # Dockerfile'i model_convert/ mount'uyla calistirir
 ├── scripts/
-│   ├── setup_local_pc.sh       # (legacy) uv/rknn_env ile native/WSL kurulum
 │   └── setup_rk3588_board.sh   # Rock5B karti icin kurulum (SDK'lar + build)
 ├── cpp_bench/
 │   ├── CMakeLists.txt
@@ -43,9 +42,11 @@ Iki farkli makine kullaniyorsun; her biri icin ayri script var.
 ### 1) Model donusturme PC'si (Docker — onerilen)
 
 `rknn-toolkit2`'nin native Windows icin resmi wheel paketi yok, sadece
-Linux icin var. Eskiden bunun icin WSL + `uv` gerekiyordu; artik Docker
-Desktop (Windows/Mac/Linux fark etmeksizin) yeterli, WSL ile ugrasmaya
-gerek yok.
+Linux icin var. Bu yuzden model donusturme Docker container icinde
+yapilir (Windows/Mac/Linux fark etmeksizin ayni sekilde calisir) —
+WSL, conda veya `uv` ile ugrasmaya **hic gerek yok**, hatta bunlar
+kesinlikle kullanilmamali (conda/venv ortamlarinin PATH'i karistirip
+yanlis Python/pip'e yonlendirmesi yaygin bir hata kaynagi).
 
 Once Docker kurulu olmali:
 - **Windows/Mac:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) indirip kurun.
@@ -76,17 +77,12 @@ bash prompt'una birakir. Icinde:
 olarak mount eder; kendi videon farkli bir isimdeyse
 `docker-compose.yml` icindeki volume satirini guncelle.
 
-> **Eski / legacy yol:** WSL2 veya native Linux'ta `uv` ile calismak
-> istersen `scripts/setup_local_pc.sh` hala duruyor:
-> ```bash
-> chmod +x scripts/setup_local_pc.sh
-> ./scripts/setup_local_pc.sh
-> source rknn_env/bin/activate
-> ```
-> Bu, `uv`'yi (yoksa) kurar, `rknn_env` adinda Python 3.10 sanal ortami
-> acar ve ayni paketleri (`ultralytics`, `onnx`, `onnxslim`,
-> `rknn-toolkit2`, `opencv-python`) kurar. Docker kullanamiyorsan bu
-> yolu tercih et.
+> **Onemli:** Model donusturme komutlarinin (`convert_all.sh`,
+> `convert_to_onnx.py`, `convert_from_video.py`) TAMAMI Docker
+> container'i **icinde** calistirilmali (`docker compose run --rm
+> model-convert bash` ile acilan prompt'ta). Kendi makinende conda/uv
+> ile olusturdugun bir sanal ortam varsa (orn. eski bir `rknn_env`
+> klasoru) onu kullanma / silebilirsin — repo artik onu desteklemiyor.
 
 ### 2) Rock5B / RK3588 karti
 
