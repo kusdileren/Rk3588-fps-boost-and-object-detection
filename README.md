@@ -55,8 +55,8 @@ Once Docker kurulu olmali:
   curl -fsSL [https://get.docker.com](https://get.docker.com) -o get-docker.sh
   sudo sh get-docker.sh
   sudo usermod -aG docker $USER
-  newgrp docker
-  
+  newgrp docker 
+  '''
 Kurulumdan sonra:
 
 ```bash
@@ -150,8 +150,8 @@ Kart tarafina gecirmek icin (DIKKAT: `build/` klasorunun ICINE degil,
 temiz build almak icin zaman zaman `rm -rf build` yapacaksin ve build/
 icine koydugun her sey bununla birlikte silinir):
 ```bash
-scp yolo26n.onnx <kullanici>@<kart_ip>:~/npu_test/cpp_bench/
-scp yolo26n_rk3588.rknn <kullanici>@<kart_ip>:~/npu_test/cpp_bench/
+scp yolo26n.onnx <kullanici>@<kart_ip>:~/Rk3588-fps-boost-and-object-detection/cpp_bench/
+scp yolo26n_rk3588.rknn <kullanici>@<kart_ip>:~/Rk3588-fps-boost-and-object-detection/cpp_bench/
 ```
 
 > **Neden split gerekli:** Ultralytics'in tek-cikisli export'unda box
