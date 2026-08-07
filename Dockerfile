@@ -25,15 +25,21 @@ WORKDIR /workspace
 
 # rknn-toolkit2 numpy/protobuf/onnx surumlerine karsi hassas; once temel
 # paketleri sabitli kuruyoruz, sonra rknn-toolkit2'yi kuruyoruz.
+#
+# - onnx SABITLENDI (1.18.0): rknn-toolkit2 2.3.2, onnx>=1.20'de kaldirilan
+#   "onnx.mapping" modulune ihtiyac duyuyor; guncel onnx ile
+#   "AttributeError: module 'onnx' has no attribute 'mapping'" hatasi verir.
+#   https://github.com/airockchip/rknn-toolkit2/issues/477
+# - torch/torchvision CPU-only index'ten kuruluyor: ultralytics'in
+#   varsayilan kurulumu GPU'lu (CUDA) torch'u ceker, bu da ~2-3 GB
+#   gereksiz nvidia_* paketi (cublas/cudnn/cusolver vb.) indirir ve build'i
+#   onemli olcude yavaslatir. Container'da GPU kullanilmadigi icin (RKNN
+#   donusturme ve CPU/NPU benchmark GPU gerektirmiyor) CPU-only yeterli.
 RUN pip install --no-cache-dir "numpy<2.0" "protobuf==3.20.3" \
-    && pip install --no-cache-dir onnx onnxslim \
+    && pip install --no-cache-dir "onnx==1.18.0" onnxslim \
+    && pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir ultralytics \
     && pip install --no-cache-dir opencv-python-headless \
     && pip install --no-cache-dir rknn-toolkit2
-
-# convert_all.sh, VIRTUAL_ENV bos ise rknn_env'i aktiflestirmeye calisiyor.
-# Container icinde paketler zaten global kurulu oldugu icin bu kontrolu
-# atlatiyoruz.
-ENV VIRTUAL_ENV=/usr/local
 
 CMD ["/bin/bash"]
