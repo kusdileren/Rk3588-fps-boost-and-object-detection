@@ -105,8 +105,8 @@ if [[ "${do_scp:-N}" =~ ^[Yy]$ ]]; then
   # gonderiyoruz -- cunku "rm -rf build" ile temiz build alirken
   # build/ icindeki her sey (model dosyalari, test videosu dahil) silinir.
   # cpp_bench/ klasoru asla silinmedigi icin veri dosyalari icin guvenli yer.
-  read -rp "Board hedef klasor [~/npu_test/cpp_bench/]: " BOARD_PATH
-  BOARD_PATH="${BOARD_PATH:-~/npu_test/cpp_bench/}"
+  read -rp "Board hedef klasor [~/Rk3588-fps-boost-and-object-detection/cpp_bench/]: " BOARD_PATH
+  BOARD_PATH="${BOARD_PATH:-~/Rk3588-fps-boost-and-object-detection/cpp_bench/}"
   scp "$ONNX_STD" "$RKNN_OUT" "$VIDEO" "${BOARD_HOST}:${BOARD_PATH}"
   echo "Gonderildi: ${BOARD_HOST}:${BOARD_PATH}"
   echo ""
@@ -114,5 +114,5 @@ if [[ "${do_scp:-N}" =~ ^[Yy]$ ]]; then
   echo "     etkilenmez, cunku build/'in DISINA gonderildi."
 else
   echo "scp atlandi. Elle gondermek icin (build/ ICINE DEGIL, cpp_bench/ ICINE):"
-  echo "  scp $ONNX_STD $RKNN_OUT $VIDEO <kullanici>@<board_ip>:~/npu_test/cpp_bench/"
+  echo "  scp $ONNX_STD $RKNN_OUT $VIDEO <kullanici>@<board_ip>:~/Rk3588-fps-boost-and-object-detection/cpp_bench/"
 fi
